@@ -1,6 +1,6 @@
 # vosk-cli
 
-This python package serves as an Vosk interface for Opencast, to generate subtitles (WebVVT files) from Video and Audio sources.
+This python package serves as an Vosk interface for Opencast. It allows to generate subtitles (WebVVT files) from Video and Audio sources via Vosk.
 
 ## installation
 
