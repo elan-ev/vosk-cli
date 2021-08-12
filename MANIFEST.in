@@ -1,0 +1,1 @@
+recursive-include vosk_cli/language_packs *
