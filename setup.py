@@ -10,11 +10,8 @@ setup(name='vosk_cli',
       packages=['vosk_cli'],
       license_files = ('LICENSE.txt'),
       install_requires=[
-        'cffi==1.14.5',
-		'docopt==0.6.2',
-		'pycparser==2.20',
-		'vosk==0.3.30',
-		'webvtt-py==0.4.6'
+		'vosk>=0.3.30',
+		'webvtt-py>=0.4.6'
       ],
       include_package_data = True,
       zip_safe=False,
