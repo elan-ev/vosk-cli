@@ -24,15 +24,20 @@ def timeString(seconds):
 def transcribe(inputFile, outputFile, language, vosk_root_directory):
 
     language_dir_path = vosk_root_directory + "/language_packs/" + language
-    default_language_dir_path = vosk_root_directory + "/language_packs/" + default_language
+    default_language_dir_path = vosk_root_directory + "/language_packs/"\
+        + default_language
     choosen_model = None
 
-    # checks if there is a model directory with a language code as the name ('de' for example)    
+    # checks if there is a model directory with a language code as the name
+    # ('de' for example)
     if not os.path.exists(language_dir_path):
-        print('Did not found language model directory "%s".' % language_dir_path)
-        print('Using default language model directory "%s".' % default_language_dir_path)
+        print('Did not find language model directory "%s".'
+              % language_dir_path)
+        print('Using default language model directory "%s".'
+              % default_language_dir_path)
         if not os.path.exists(default_language_dir_path):
-            print('Did not found default model directory "%s".' % default_language_dir_path)
+            print('Did not found default model directory "%s".'
+                  % default_language_dir_path)
             exit(1)
         else:
             choosen_model = default_language_dir_path
@@ -69,20 +74,22 @@ def transcribe(inputFile, outputFile, language, vosk_root_directory):
 
         caption = Caption(start, end, textwrap.fill(content))
         vtt.captions.append(caption)
-    
+
     # print(vtt.content)
     # save webvtt
     vtt.save(outputFile)
 
 
 def main():
-    parser = ArgumentParser(description='Creates a WebVTT file out of an media file with an audio track.')
+    parser = ArgumentParser(description='Creates a WebVTT file out of a '
+                            'media file with an audio track.')
     parser.add_argument('-i', type=str, dest='inputFile', required=True,
-    help='Path to the media file that shall be transcribed.')
+                        help='Path to the media file to transcribed.')
     parser.add_argument('-o', type=str, dest='outputFile', required=True,
-    help='The path to the output file.')
+                        help='The path to the output file.')
     parser.add_argument('-l', type=str, dest='language', required=True,
-    help='The language code. It determines which model will be used to transcribe the media file.')
+                        help='The language code. It determines which model '
+                        'will be used to transcribe the media file.')
     args = parser.parse_args()
 
     vosk_root_directory = os.path.dirname(os.path.realpath(__file__))
