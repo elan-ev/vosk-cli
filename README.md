@@ -8,7 +8,7 @@ Go to the Website `https://alphacephei.com/vosk/models` to download a language m
 
 Unzip the folder into the `language_pack` directory and rename it to the corresponding language. The default language directory vosk-cli will search for is `eng`.
 
-Go into the root directory and run `pip install . `
+Go into the root directory and run `pip install . ` (the dot is important)
 
 Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -l <name_of_the_language_model_directory>`
 
