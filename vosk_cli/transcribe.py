@@ -44,7 +44,7 @@ def transcribe(inputFile, outputFile, language, vosk_root_directory):
     else:
         choosen_model = language_dir_path
 
-    print('Starting transcription with language model "%s"' % language)
+    print('Start transcribing...')
     sample_rate = 16000
     model = Model(choosen_model)
     rec = KaldiRecognizer(model, sample_rate)
@@ -77,7 +77,9 @@ def transcribe(inputFile, outputFile, language, vosk_root_directory):
 
     # print(vtt.content)
     # save webvtt
+    print('Finished transcribing. Saving WebVTT file...')    
     vtt.save(outputFile)
+    print('WebVTT saved.')
 
 
 def main():
