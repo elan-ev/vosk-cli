@@ -122,7 +122,7 @@ def transcribe(inputFile, outputFile, language):
     # print(vtt.content)
 
 
-if __name__ == '__main__':
+def main():
     parser = ArgumentParser(description='Creates a WebVTT file out of a '
                             'media file with an audio track.')
     parser.add_argument('-i', type=str, dest='inputFile', required=True,
