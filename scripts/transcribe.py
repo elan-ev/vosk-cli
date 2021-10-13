@@ -45,7 +45,8 @@ def write_webvtt_captions(rec_results):
         if not result:
             continue
 
-        # main logic for the captions "format" (words per line and lines per paragraph)
+        # main logic for the captions "format"
+        # (words per line and lines per paragraph)
         for entry in result:
             char_count += len(entry['word'])
             if char_count > MAX_CHARS_PER_LINE and len(line) != 0:
@@ -82,12 +83,15 @@ def transcribe(inputFile, outputFile, language):
     chosen_language_dir_path = language_dir_path + language
     chosen_model = None
 
-    # checks if there is a model directory with a language code as the name    
+    # checks if there is a model directory with a language code as the name
     if not os.path.exists(chosen_language_dir_path):
-        print('Did not find language model directory "%s".' % chosen_language_dir_path)
-        print('Using default language model directory "%s".' % default_language_dir_path)
+        print('Did not find language model directory "%s".'
+              % chosen_language_dir_path)
+        print('Using default language model directory "%s".'
+              % default_language_dir_path)
         if not os.path.exists(default_language_dir_path):
-            print('Did not found default model directory "%s".' % default_language_dir_path)
+            print('Did not found default model directory "%s".'
+                  % default_language_dir_path)
             exit(1)
         else:
             chosen_model = default_language_dir_path
