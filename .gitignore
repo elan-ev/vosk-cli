@@ -1,3 +1,4 @@
 build/
 dist/
-vosk_cli.egg-info/
+scripts.egg-info/
+.idea/
