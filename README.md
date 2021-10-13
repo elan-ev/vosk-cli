@@ -4,12 +4,11 @@ This python package serves as an Vosk interface for Opencast. It allows to gener
 
 ## installation
 
-Go to the Website `https://alphacephei.com/vosk/models` to download a language model. 
-
-Unzip the folder into the `language_pack` directory and rename it to the corresponding language. The default language directory vosk-cli will search for is `eng`.
-
 Go into the root directory and run `pip install . ` (the dot is important)
 
-Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -l <name_of_the_language_model_directory>`
+Go to the Website `https://alphacephei.com/vosk/models` and download at least the english language model.
 
-The fallback for `name_of_the_language_model_directory` is `eng`.
+Unzip the folder of the language model into `/usr/share/vosk/language/***`, and rename the folder from `***` to `eng` for example.
+Please use 3 digit language codes for the directory name. The default and fallback language directory of vosk-cli is `eng`.
+
+Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -l <3_digit_language_code>`.
