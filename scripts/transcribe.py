@@ -3,7 +3,7 @@
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
 from argparse import ArgumentParser
-from scripts.recasepunc import CasePuncPredictor
+from recasepunc.utils import CasePuncPredictor
 import os
 import subprocess
 import json
