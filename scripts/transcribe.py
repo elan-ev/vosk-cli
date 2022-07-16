@@ -7,8 +7,6 @@ import os
 import subprocess
 import json
 
-language_dir_path = "/usr/share/vosk/language/"
-default_language = "eng"
 SetLogLevel(-1)
 
 MAX_CHARS_PER_LINE = 35
@@ -21,6 +19,37 @@ def time_string(seconds):
     hours = int(minutes / 60)
     minutes = int(minutes % 60)
     return '%i:%02i:%06.3f' % (hours, minutes, seconds)
+
+
+def model_path(model):
+    '''
+    Resolve the model path based on the model input argument.
+    Resolution happens in the following order:
+
+    1. Use value directly if it is an absolute directory path
+    2. Probe for model in the local ./models folder
+    3. Probe for model in /usr/share/vosk/models/
+
+    :param model: model command line argument
+    :type model: str
+    :raises ValueError: If model does not map to a directory
+    :return: Path to model directory
+    '''
+    # Do we have an absolute path to a directory?
+    absmodel = os.path.abspath(model)
+    if model.startswith(absmodel):
+        if os.path.isdir(model):
+            return model
+        raise ValueError(f'Model path {model} does not exist')
+
+    # Is it a model in the local `models` directory?
+    if os.path.isdir('./models/' + model):
+        return './models/' + model
+
+    # Check the global models folder
+    if os.path.isdir('/usr/share/vosk/models/' + model):
+        return '/usr/share/vosk/models/' + model
+    raise ValueError('Cannot resolve model path')
 
 
 def write_captions_paragraph(vtt, paragraph):
@@ -78,29 +107,11 @@ def write_webvtt_captions(rec_results):
     return vtt
 
 
-def transcribe(inputFile, outputFile, language):
-    default_language_dir_path = language_dir_path + default_language
-    chosen_language_dir_path = language_dir_path + language
-    chosen_model = None
+def transcribe(inputFile, outputFile, model):
 
-    # checks if there is a model directory with a language code as the name
-    if not os.path.exists(chosen_language_dir_path):
-        print('Did not find language model directory "%s".'
-              % chosen_language_dir_path)
-        print('Using default language model directory "%s".'
-              % default_language_dir_path)
-        if not os.path.exists(default_language_dir_path):
-            print('Did not found default model directory "%s".'
-                  % default_language_dir_path)
-            exit(1)
-        else:
-            chosen_model = default_language_dir_path
-    else:
-        chosen_model = chosen_language_dir_path
-
-    print('Start transcribing...')
+    print(f'Start transcribing with model {model}')
     sample_rate = 16000
-    model = Model(chosen_model)
+    model = Model(model)
     rec = KaldiRecognizer(model, sample_rate)
     rec.SetWords(True)
 
@@ -133,13 +144,24 @@ def main():
                         help='Path to the media file to transcribed.')
     parser.add_argument('-o', type=str, dest='outputFile', required=True,
                         help='The path to the output file.')
-    parser.add_argument('-l', type=str, dest='language', required=True,
+    parser.add_argument('-l', type=str, dest='language', required=False,
                         help='The language code. It determines which model '
-                        'will be used to transcribe the media file.')
+                        'will be used to transcribe the media file. '
+                        'DEPRECATED: Use model (-m) instead.')
+    parser.add_argument('-m', '--model', type=str, dest='model',
+                        help='The language model to use for transcribing the '
+                        'media file. Value will be checked in the following '
+                        'order: 1. value as system path. 2. Value in local '
+                        './model folder. 3. Value in /usr/share/vosk/models/.')
     args = parser.parse_args()
 
     inputFile = args.inputFile
     outputFile = args.outputFile
-    language = args.language
+    if args.language:
+        model = '/usr/share/vosk/language/' + args.language
+        print(f'WARNING: Mapping deprecated language option to model {model}')
+    else:
+        model = args.model
+    model = model_path(model)
 
-    transcribe(inputFile, outputFile, language)
+    transcribe(inputFile, outputFile, model)
