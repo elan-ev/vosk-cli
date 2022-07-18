@@ -4,6 +4,8 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
 from argparse import ArgumentParser
 from recasepunc.utils import CasePuncPredictor
+import scripts
+import sys
 import os
 import subprocess
 import json
@@ -131,7 +133,12 @@ def transcribe(inputFile, outputFile, language):
         text += ' '.join([entry['word'] for entry in result])
 
     # Predicts Punctuation of text
+    # Manipulate main to be able to load model
+    old_main = sys.modules['__main__']
+    sys.modules['__main__'] = scripts
     predictor = CasePuncPredictor('scripts/checkpoint', lang="de")
+    sys.modules['__main__'] = old_main
+
     tokens = list(enumerate(predictor.tokenize(text)))
     case_result = ""
     for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
