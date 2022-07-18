@@ -131,7 +131,7 @@ def transcribe(inputFile, outputFile, language):
         text += ' '.join([entry['word'] for entry in result])
 
     # Predicts Punctuation of text
-    predictor = CasePuncPredictor('scripts/checkpoint', lang="de")
+    predictor = CasePuncPredictor(chosen_language_dir_path + '-punctation/checkpoint', lang="de")
     tokens = list(enumerate(predictor.tokenize(text)))
     case_result = ""
     for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
