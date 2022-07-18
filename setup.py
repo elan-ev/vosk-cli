@@ -10,10 +10,10 @@ setup(name='vosk-cli',
       author='Martin Wygas',
       author_email='mwygas@uos.de',
       license='Apache-2.0',
-      packages=['scripts', 'recasepunc'],
+      packages=['transcriber', 'recasepunc'],
       license_files=('LICENSE'),
       include_package_data=True,
       zip_safe=False,
       entry_points={
-          'console_scripts': ['vosk-cli=scripts.transcribe:main'],
+          'console_scripts': ['vosk-cli=transcriber.utils:main'],
       })

@@ -4,7 +4,7 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
 from argparse import ArgumentParser
 from recasepunc.utils import CasePuncPredictor
-import scripts
+import transcriber
 import sys
 import os
 import subprocess
@@ -135,7 +135,7 @@ def transcribe(inputFile, outputFile, language, punc):
         # Predicts Punctuation of text
         # Manipulate main to be able to load model
         old_main = sys.modules['__main__']
-        sys.modules['__main__'] = scripts
+        sys.modules['__main__'] = transcriber
         predictor = CasePuncPredictor(chosen_language_dir_path + '-punctuation/checkpoint', lang="de")
         sys.modules['__main__'] = old_main
 
@@ -181,7 +181,7 @@ def main():
                         help='The path to the output file.')
     parser.add_argument('-l', type=str, dest='language', required=True,
                         help='The language code. It determines which model '
-                        'will be used to transcribe the media file.')
+                        'will be used to transcriber the media file.')
     parser.add_argument('-p', dest='punc', action='store_true',
                         help='Set flag to use punctuation.')
     args = parser.parse_args()
