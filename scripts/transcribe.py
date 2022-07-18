@@ -81,7 +81,7 @@ def write_webvtt_captions(rec_results):
     return vtt
 
 
-def transcribe(inputFile, outputFile, language):
+def transcribe(inputFile, outputFile, language, punc):
     default_language_dir_path = language_dir_path + default_language
     chosen_language_dir_path = language_dir_path + language
     chosen_model = None
@@ -122,49 +122,50 @@ def transcribe(inputFile, outputFile, language):
     rec_results.append(rec.FinalResult())
     print('Finished transcribing...')
     print('Start punctuating...')
+    if punc:
+        # Punctuation
+        # Load text from json
+        text = ''
+        for i, rec_result in enumerate(rec_results):
+            result = json.loads(rec_result).get('result')
+            if not result:
+                continue
+            text += ' '.join([entry['word'] for entry in result])
 
-    # Punctuation
-    # Load text from json
-    text = ''
-    for i, rec_result in enumerate(rec_results):
-        result = json.loads(rec_result).get('result')
-        if not result:
-            continue
-        text += ' '.join([entry['word'] for entry in result])
+        # Predicts Punctuation of text
+        # Manipulate main to be able to load model
+        old_main = sys.modules['__main__']
+        sys.modules['__main__'] = scripts
+        predictor = CasePuncPredictor(chosen_language_dir_path + '-punctuation/checkpoint', lang="de")
+        sys.modules['__main__'] = old_main
 
-    # Predicts Punctuation of text
-    # Manipulate main to be able to load model
-    old_main = sys.modules['__main__']
-    sys.modules['__main__'] = scripts
-    predictor = CasePuncPredictor('scripts/checkpoint', lang="de")
-    sys.modules['__main__'] = old_main
+        tokens = list(enumerate(predictor.tokenize(text)))
+        case_result = ""
+        for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
+            prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
+            if token[1][0] != '#':
+                case_result = case_result + ' ' + prediction
+            else:
+                case_result = case_result + prediction
 
-    tokens = list(enumerate(predictor.tokenize(text)))
-    case_result = ""
-    for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
-        prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
-        if token[1][0] != '#':
-            case_result = case_result + ' ' + prediction
-        else:
-            case_result = case_result + prediction
+        # Stores it back to json
+        case_result_list = case_result.split(" ")
+        case_rec_result = []
+        word = 1
+        for i, rec_result in enumerate(rec_results):
+            result = json.loads(rec_result).get('result')
+            if not result:
+                continue
+            for entry in result:
+                entry['word'] = case_result_list[word]
+                word += 1
+            case_rec_result.append('{ "result" : ' + str(result).replace("'", '"') + '}')
 
-    # Stores it back to json
-    case_result_list = case_result.split(" ")
-    case_rec_result = []
-    word = 1
-    for i, rec_result in enumerate(rec_results):
-        result = json.loads(rec_result).get('result')
-        if not result:
-            continue
-        for entry in result:
-            entry['word'] = case_result_list[word]
-            word += 1
-        case_rec_result.append('{ "result" : ' + str(result).replace("'", '"') + '}')
-
-    print('Finished punctuating...')
-
-    vtt = write_webvtt_captions(case_rec_result)
-
+        print('Finished punctuating...')
+        vtt = write_webvtt_captions(case_rec_result)
+    else:
+        print('No punctuating wished...')
+        vtt = write_webvtt_captions(rec_results)
     # save webvtt
     print('Finished writing. Saving WebVTT file...')
     vtt.save(outputFile)
@@ -181,10 +182,13 @@ def main():
     parser.add_argument('-l', type=str, dest='language', required=True,
                         help='The language code. It determines which model '
                         'will be used to transcribe the media file.')
+    parser.add_argument('-p', dest='punc', action='store_true',
+                        help='Set flag to use punctuation.')
     args = parser.parse_args()
 
     inputFile = args.inputFile
+    punc = args.punc
     outputFile = args.outputFile
     language = args.language
 
-    transcribe(inputFile, outputFile, language)
+    transcribe(inputFile, outputFile, language, punc)
