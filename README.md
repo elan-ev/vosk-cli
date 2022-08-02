@@ -4,19 +4,22 @@ This python package serves as an Vosk interface for Opencast. It allows to gener
 
 ## Installation
 
-### 1. Install this project
+### 1. Install vosk-cli
 
-Clone this project, go into the root directory and run `pip install . ` (the dot is important)
+Clone this project and run
 
-### 2. Install this dependencies
+```
+python setup.py install
+```
 
-- ffmpeg
-- vosk (with pip - package installer for python)
-- webvtt-py (pip)
+### 2. Install dependencies
+
+- FFmpeg
+- `pip install -r requirements.txt`
 
 ### 3. Download the language model
 
-Go to the Website `https://alphacephei.com/vosk/models` and download at least the english language model.
+Go to `https://alphacephei.com/vosk/models` and download at least the English language model.
 
 Unzip the folder of the language model into `/usr/share/vosk/language/***`, and rename the folder from `***` to `eng` for example.
 Please use 3 digit language codes for the directory name. The default and fallback language directory of vosk-cli is `eng`.
