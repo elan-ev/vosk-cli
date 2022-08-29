@@ -25,7 +25,7 @@ def read(filename):
 
 
 description_text = 'A command line interface for Vosk. '\
-    'It generates subtitles (WebVVT files) from video and audio sources.'
+    'It generates subtitles (WebVTT files) from video and audio sources.'
 
 setup(
     name='vosk-cli',
