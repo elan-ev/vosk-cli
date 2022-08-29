@@ -1,0 +1,7 @@
+webvtt-py
+vosk
+numpy
+regex
+torch
+tqdm
+transformers
