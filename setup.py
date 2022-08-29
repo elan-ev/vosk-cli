@@ -36,7 +36,7 @@ setup(
     author='Martin Wygas',
     author_email='mwygas@uos.de',
     license='Apache-2.0',
-    packages=['voskcli'],
+    packages=['voskcli', 'recasepunc'],
     license_files=('LICENSE'),
     include_package_data=True,
     install_requires=read('requirements.txt').split(),
