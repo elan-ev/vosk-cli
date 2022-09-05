@@ -152,13 +152,13 @@ def transcribe(inputFile, outputFile, model, punc):
             result = json.loads(rec_result).get('result')
             if not result:
                 continue
-            text += ' '.join([entry['word'] for entry in result])
+            text += ' '.join([entry['word'] for entry in result])+' '
 
         # Predicts Punctuation of text
         # Manipulate main to be able to load model
         old_main = sys.modules['__main__']
         sys.modules['__main__'] = voskcli
-        predictor = CasePuncPredictor(punc)
+        predictor = CasePuncPredictor(punc + '/checkpoint')
         sys.modules['__main__'] = old_main
 
         # Beginning punctuation
