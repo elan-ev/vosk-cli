@@ -119,6 +119,7 @@ def write_webvtt_captions(result_list):
 
     return vtt
 
+
 def transcribe(inputFile, outputFile, model, punc):
 
     print(f'Start transcribing with model {model}')
@@ -164,8 +165,10 @@ def transcribe(inputFile, outputFile, model, punc):
         # Beginning punctuation
         tokens = list(enumerate(predictor.tokenize(text)))
         case_result = ""
-        for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
-            prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
+        predicted = predictor.predict(tokens, lambda x: x[1])
+        for token, case_label, punc_label in predicted:
+            map_label = predictor.map_case_label(token[1], case_label)
+            prediction = predictor.map_punc_label(map_label, punc_label)
             if token[1][0] != '#':
                 case_result = case_result + ' ' + prediction
             else:
