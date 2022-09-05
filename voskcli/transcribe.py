@@ -158,7 +158,7 @@ def transcribe(inputFile, outputFile, model, punc):
         # Manipulate main to be able to load model
         old_main = sys.modules['__main__']
         sys.modules['__main__'] = voskcli
-        predictor = CasePuncPredictor(punc + '/checkpoint')
+        predictor = CasePuncPredictor(punc)
         sys.modules['__main__'] = old_main
 
         # Beginning punctuation
