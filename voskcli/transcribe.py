@@ -111,7 +111,8 @@ def write_webvtt_captions(rec_results):
     Process transcription data.
 
     Split transcription data into lines of up to MAX_CHARS_PER_LINE chars
-    and MAX_LINES_IN_PARAGRAPH lines and append paragraphs to vtt file.
+    and MAX_LINES_IN_PARAGRAPH lines, append paragraphs to vtt file and
+    calculate the average confidence coefficient of the transcription.
 
     :param rec_results: Complete segmented list of python dictionaries,
         containing transcription data.
@@ -119,13 +120,16 @@ def write_webvtt_captions(rec_results):
         which contain time-coded entries for each transcribed word.
         To access these, use key `result`.
     :type rec_results: list
-    :return: WebVTT object containing formatted captions
-    :rtype: WebVTT object
+    :return vtt: WebVTT object containing formatted captions
+    :rtype vtt: WebVTT object
+    :return avg_confidence: Average confidence of the transcription
+    :rtype avg_confidence: float
     '''
     vtt = WebVTT()
     line = []
     paragraph = []
     char_count = 0
+    confidence = []
     for i, rec_result in enumerate(rec_results):
         result = json.loads(rec_result).get('result')
         if not result:
@@ -134,6 +138,7 @@ def write_webvtt_captions(rec_results):
         # main logic for the captions "format"
         # (words per line and lines per paragraph)
         for entry in result:
+            confidence.append(entry['conf'])
             char_count += len(entry['word'])
             if char_count > MAX_CHARS_PER_LINE and len(line) != 0:
                 if len(paragraph) == MAX_LINES_IN_PARAGRAPH:
@@ -161,7 +166,10 @@ def write_webvtt_captions(rec_results):
         paragraph = [line]
         write_captions_paragraph(vtt, paragraph)
 
-    return vtt
+    # calculate average confidence coefficient
+    avg_confidence = sum(confidence) / len(confidence)
+
+    return vtt, avg_confidence
 
 
 def transcribe(inputFile, outputFile, model):
@@ -197,10 +205,10 @@ def transcribe(inputFile, outputFile, model):
             rec_results.append(rec.Result())
 
     rec_results.append(rec.FinalResult())
-    vtt = write_webvtt_captions(rec_results)
-
+    vtt, avg_confidence = write_webvtt_captions(rec_results)
     # save webvtt
-    print('Finished transcribing. Saving WebVTT file...')
+    print('Finished transcribing with an average confidence '
+          f'of {avg_confidence:.2f}. Saving WebVTT file...')
     vtt.save(outputFile)
     print('WebVTT saved.')
     # print(vtt.content)
