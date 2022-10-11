@@ -31,6 +31,15 @@ MAX_LINES_IN_PARAGRAPH = 2
 
 
 def time_string(seconds):
+    '''
+    Convert time in seconds to a string containing hours,
+    minutes and seconds.
+
+    :param seconds: Time in seconds
+    :type seconds: float
+    :return: Time in format h:mm:ss.f
+    :rtype: str
+    '''
     minutes = seconds / 60
     seconds = seconds % 60
     hours = int(minutes / 60)
@@ -70,6 +79,25 @@ def model_path(model):
 
 
 def write_captions_paragraph(vtt, paragraph):
+    '''
+    Append time-coded paragraphs to vtt file.
+
+    :param vtt: Empty or partially filled WebVTT object to write
+        transcriptions to
+    :type vtt: WebVTT object
+    :param paragraph: Transcription data segment representing a single
+        paragraph as a list of lists, which contain python dictionaries.
+        Each inner list represents a single line of a paragraph,
+        while the dictionaries each represent a single word of that line.
+        Dictionary entries contain the following keys:
+
+        * conf: Confidence coefficient for the transcribed word (float)
+        * end: End time of transcribed word in seconds (float)
+        * start: Start time of transcribed word in seconds (float)
+        * word: Transcribed word (string)
+
+    :type paragraph: list
+    '''
     start = time_string(paragraph[0][0]['start'])
     end = time_string(paragraph[-1][-1]['end'])
     content = ''
@@ -82,6 +110,21 @@ def write_captions_paragraph(vtt, paragraph):
 
 
 def write_webvtt_captions(result_list):
+    '''
+    Process transcription data.
+
+    Split transcription data into lines of up to MAX_CHARS_PER_LINE chars
+    and MAX_LINES_IN_PARAGRAPH lines and append paragraphs to vtt file.
+
+    :param rec_results: Complete segmented list of python dictionaries,
+        containing transcription data.
+        Data includes nested lists of dictionaries,
+        which contain time-coded entries for each transcribed word.
+        To access these, use key `result`.
+    :type rec_results: list
+    :return: WebVTT object containing formatted captions
+    :rtype: WebVTT object
+    '''
     vtt = WebVTT()
     line = []
     paragraph = []
@@ -121,7 +164,18 @@ def write_webvtt_captions(result_list):
 
 
 def transcribe(inputFile, outputFile, model, punc):
+    '''
+        Produce transcription.
+    Create transcription data from inputFile, process data
+    and save finished transcription to outputFile.
 
+    :param inputFile: Path to input file
+    :type inputFile: str
+    :param outputFile: Path to output file
+    :type outputFile: str
+    :param model: Path to model directory
+    :type model: str
+    '''
     print(f'Start transcribing with model {model}')
     sample_rate = 16000
     model = Model(model)
@@ -195,9 +249,13 @@ def transcribe(inputFile, outputFile, model, punc):
     print('Finished writing. Saving WebVTT file...')
     vtt.save(outputFile)
     print('WebVTT saved.')
+    # print(vtt.content)
 
 
 def main():
+    '''
+    Define arguments for command line usage and carry out transcription.
+    '''
     parser = ArgumentParser(description='Creates a WebVTT file out of a '
                             'media file with an audio track.')
     parser.add_argument('-i', type=str, dest='inputFile', required=True,

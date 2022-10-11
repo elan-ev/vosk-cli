@@ -20,3 +20,9 @@ jobs:
 
       - name: Run flake8
         run: flake8 setup.py voskcli
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Run bandit
+        run: bandit -s B404,B603 -r voskcli
