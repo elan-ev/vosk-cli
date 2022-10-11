@@ -198,7 +198,6 @@ def transcribe(inputFile, outputFile, model, punc):
 
     rec_results.append(rec.FinalResult())
     print('Finished transcribing...')
-    print(rec_results)
 
     if punc != "":
         print(f'Start punctuating with model {punc}')
@@ -210,9 +209,6 @@ def transcribe(inputFile, outputFile, model, punc):
             if not result:
                 continue
             text += ' '.join([entry['word'] for entry in result])+' '
-
-        print(text)
-        print("==================================================")
 
         # Predicts Punctuation of text
         # Manipulate main to be able to load model
@@ -228,11 +224,12 @@ def transcribe(inputFile, outputFile, model, punc):
         for token, case_label, punc_label in predicted:
             map_label = predictor.map_case_label(token[1], case_label)
             prediction = predictor.map_punc_label(map_label, punc_label)
-            if token[1][0] != '#' and prediction != '-' and not case_result.endswith('-'):
+            if token[1][0] != '#'\
+                    and prediction != '-'\
+                    and not case_result.endswith('-'):
                 case_result = case_result + ' ' + prediction
             else:
                 case_result = case_result + prediction
-        print(case_result)
         case_result_list = case_result.split(" ")
         print('Finished punctuating...')
     else:
@@ -249,7 +246,6 @@ def transcribe(inputFile, outputFile, model, punc):
                 entry['word'] = case_result_list[word]
                 word += 1
         result_list += result
-    print(result_list)
     vtt = write_webvtt_captions(result_list)
 
     # save WebVTT
