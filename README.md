@@ -36,10 +36,10 @@ You can unzip the folder of the language model into any directory, but it is rec
 
 ## Usage
 
-Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -m <model_name_or_path>`.
+Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -m <model_name_or_path> -p <punctation_model_name_or_path>`.
 
-For example, if there is a `video.mp4` file in your download folder and a model named `vosk-model-en-us-0.22` in the `./models` folder you created, you can run
+For example, if there is a `video.mp4` file in your download folder and a model named `vosk-model-en-us-0.22` and `vosk-recasepunc-en-0.22/checkpoint` in the `./models` folder you created, you can run
 
-`vosk-cli -i ~/Downloads/video.mp4 -o text -m vosk-model-en-us-0.22`
+`vosk-cli -i ~/Downloads/video.mp4 -o text -m vosk-model-en-us-0.22 -p vosk-recasepunc-en-0.22`
 
 This will create a `text.vtt` file (which contains the transcribed captions) in your current directory.

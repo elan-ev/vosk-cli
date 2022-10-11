@@ -17,6 +17,9 @@ limitations under the License.
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
 from argparse import ArgumentParser
+from recasepunc.recasepunc import CasePuncPredictor
+import sys
+import voskcli
 import os
 import subprocess
 import json
@@ -106,7 +109,7 @@ def write_captions_paragraph(vtt, paragraph):
     vtt.captions.append(caption)
 
 
-def write_webvtt_captions(rec_results):
+def write_webvtt_captions(result_list):
     '''
     Process transcription data.
 
@@ -126,29 +129,25 @@ def write_webvtt_captions(rec_results):
     line = []
     paragraph = []
     char_count = 0
-    for i, rec_result in enumerate(rec_results):
-        result = json.loads(rec_result).get('result')
-        if not result:
-            continue
 
+    for i, result in enumerate(result_list):
         # main logic for the captions "format"
         # (words per line and lines per paragraph)
-        for entry in result:
-            char_count += len(entry['word'])
-            if char_count > MAX_CHARS_PER_LINE and len(line) != 0:
-                if len(paragraph) == MAX_LINES_IN_PARAGRAPH:
-                    write_captions_paragraph(vtt, paragraph)
-                    paragraph = [line]
-                    line = [entry]
-                    char_count = len(entry['word'])
-                    continue
-                else:
-                    paragraph.append(line)
-                    line = [entry]
-                    char_count = len(entry['word'])
+        char_count += len(result['word'])
+        if char_count > MAX_CHARS_PER_LINE and len(line) != 0:
+            if len(paragraph) == MAX_LINES_IN_PARAGRAPH:
+                write_captions_paragraph(vtt, paragraph)
+                paragraph = [line]
+                line = [result]
+                char_count = len(result['word'])
+                continue
             else:
-                line.append(entry)
-                char_count += 1  # add 1 because of whitespace
+                paragraph.append(line)
+                line = [result]
+                char_count = len(result['word'])
+        else:
+            line.append(result)
+            char_count += 1  # add 1 because of whitespace
 
     # write the remaining words into the captions file
     if len(paragraph) != 0:
@@ -164,10 +163,9 @@ def write_webvtt_captions(rec_results):
     return vtt
 
 
-def transcribe(inputFile, outputFile, model):
+def transcribe(inputFile, outputFile, model, punc):
     '''
-    Produce transcription.
-
+        Produce transcription.
     Create transcription data from inputFile, process data
     and save finished transcription to outputFile.
 
@@ -189,6 +187,8 @@ def transcribe(inputFile, outputFile, model):
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
 
     rec_results = []
+    result_list = []
+    case_result_list = []
     while True:
         data = process.stdout.read(4000)
         if len(data) == 0:
@@ -197,10 +197,59 @@ def transcribe(inputFile, outputFile, model):
             rec_results.append(rec.Result())
 
     rec_results.append(rec.FinalResult())
-    vtt = write_webvtt_captions(rec_results)
+    print('Finished transcribing...')
 
-    # save webvtt
-    print('Finished transcribing. Saving WebVTT file...')
+    if punc != "":
+        print(f'Start punctuating with model {punc}')
+        # Punctuation
+        # Load text from json
+        text = ''
+        for rec_result in rec_results:
+            result = json.loads(rec_result).get('result')
+            if not result:
+                continue
+            text += ' '.join([entry['word'] for entry in result])+' '
+
+        # Predicts Punctuation of text
+        # Manipulate main to be able to load model
+        old_main = sys.modules['__main__']
+        sys.modules['__main__'] = voskcli
+        predictor = CasePuncPredictor(punc + '/checkpoint')
+        sys.modules['__main__'] = old_main
+
+        # Beginning punctuation
+        tokens = list(enumerate(predictor.tokenize(text)))
+        case_result = ""
+        predicted = predictor.predict(tokens, lambda x: x[1])
+        for token, case_label, punc_label in predicted:
+            map_label = predictor.map_case_label(token[1], case_label)
+            prediction = predictor.map_punc_label(map_label, punc_label)
+            if token[1][0] != '#'\
+                    and prediction != '-'\
+                    and not case_result.endswith('-'):
+                case_result = case_result + ' ' + prediction
+            else:
+                case_result = case_result + prediction
+        case_result_list = case_result.split(" ")
+        print('Finished punctuating...')
+    else:
+        print('No punctuating wished...')
+
+    # Creating array for next function
+    word = 1
+    for rec_result in rec_results:
+        result = json.loads(rec_result).get('result')
+        if not result:
+            continue
+        if punc != "":
+            for entry in result:
+                entry['word'] = case_result_list[word]
+                word += 1
+        result_list += result
+    vtt = write_webvtt_captions(result_list)
+
+    # save WebVTT
+    print('Finished writing. Saving WebVTT file...')
     vtt.save(outputFile)
     print('WebVTT saved.')
     # print(vtt.content)
@@ -225,9 +274,15 @@ def main():
                         'media file. Value will be checked in the following '
                         'order: 1. value as system path. 2. Value in local '
                         './model folder. 3. Value in /usr/share/vosk/models/.')
+    parser.add_argument('-p', '--punctuation', type=str, dest='punc',
+                        help='The punctuation model to use for punctuate the '
+                        'media file. Value will be checked in the following '
+                        'order: 1. value as system path. 2. Value in local '
+                        './model folder. 3. Value in /usr/share/vosk/models/.')
     args = parser.parse_args()
 
     inputFile = args.inputFile
+    puncuationFile = args.punc
     outputFile = args.outputFile
     if args.language:
         model = '/usr/share/vosk/language/' + args.language
@@ -235,5 +290,8 @@ def main():
     else:
         model = args.model
     model = model_path(model)
+    punc = ""
+    if puncuationFile:
+        punc = model_path(puncuationFile)
 
-    transcribe(inputFile, outputFile, model)
+    transcribe(inputFile, outputFile, model, punc)
