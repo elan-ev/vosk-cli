@@ -1,1 +1,1 @@
-recursive-include scripts/language_packs *
+include LICENSE README.md requirements.txt
