@@ -17,6 +17,7 @@ limitations under the License.
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
 from argparse import ArgumentParser
+from glob import glob
 import os
 import subprocess
 import json
@@ -214,6 +215,47 @@ def transcribe(inputFile, outputFile, model):
     # print(vtt.content)
 
 
+def match_language_to_model(lang):
+    '''Try mapping a specified language to a language model
+
+    :param lang: The language string to map
+    :type lang: str
+    :return: Path to language model
+    '''
+    # check if we have an old language dir for this language first
+    language_dir = f'/usr/share/vosk/language/{lang}/'
+    if os.path.isdir(language_dir):
+        print(f'Mapping language option to model {language_dir}')
+        return language_dir
+
+    # Map some common language codes
+    language_mappings = {
+            'eng': 'en',
+            'deu': 'de',
+            'ger': 'de',
+            'spa': 'es',
+            'zho': 'cn',
+            'fra': 'fr',
+            'rus': 'ru',
+            'por': 'pt',
+            'tur': 'tr'}
+    lang = language_mappings.get(lang, lang)
+
+    # Map to a 2 character code
+    lang = lang[:2]
+
+    # Try finding a matching module
+    modules = glob(f'/usr/share/vosk/models/*-{lang}-*') \
+        or glob(f'./models/*-{lang}-*')
+
+    if not len(modules):
+        raise ValueError('Unable to map language to model')
+
+    model = modules[0]
+    print(f'Selecting model {model}')
+    return model
+
+
 def main():
     '''
     Define arguments for command line usage and carry out transcription.
@@ -238,10 +280,8 @@ def main():
     inputFile = args.inputFile
     outputFile = args.outputFile
     if args.language:
-        model = '/usr/share/vosk/language/' + args.language
-        print(f'WARNING: Mapping deprecated language option to model {model}')
+        model = match_language_to_model(args.language)
     else:
-        model = args.model
-    model = model_path(model)
+        model = model_path(args.model)
 
     transcribe(inputFile, outputFile, model)
