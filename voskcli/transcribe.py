@@ -212,7 +212,60 @@ def transcribe(inputFile, outputFile, model):
           f'of {avg_confidence:.2f}. Saving WebVTT file...')
     vtt.save(outputFile)
     print('WebVTT saved.')
-    # print(vtt.content)
+
+
+def detect_model(inputFile, probeTime):
+    '''
+    Detect best model to use.
+
+    :param inputFile: Path to input file
+    :type inputFile: str
+    :param probeTime: Probe time in seconds
+    :type probeTime: int
+    :return: Best model to use
+    :type model: str
+    '''
+    available_models = glob('./models/*') + glob('/usr/share/vosk/models/*')
+    best_model = None
+    best_confidence = 0
+
+    for model in available_models:
+        print(f'Probing model {model}')
+        sample_rate = 16000
+        try:
+            rec = KaldiRecognizer(Model(model), sample_rate)
+            rec.SetWords(True)
+        except Exception:
+            print('Does not seem to be a proper model. Skipping.')
+            continue
+
+        command = ['ffmpeg', '-nostdin', '-loglevel', 'quiet', '-i', inputFile,
+                   '-t', str(probeTime), '-ar', str(sample_rate), '-ac', '1',
+                   '-f', 's16le', '-']
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+
+        rec_results = []
+        while True:
+            data = process.stdout.read(4000)
+            if len(data) == 0:
+                break
+            if rec.AcceptWaveform(data):
+                rec_results.append(rec.Result())
+
+        rec_results.append(rec.FinalResult())
+
+        confidence = []
+        for rec_result in rec_results:
+            for entry in json.loads(rec_result).get('result', []):
+                confidence.append(entry['conf'])
+        avg_confidence = sum(confidence) / len(confidence)
+        print(f'Detected confidence: {avg_confidence}')
+
+        if avg_confidence > best_confidence:
+            best_confidence = avg_confidence
+            best_model = model
+
+    return best_model
 
 
 def match_language_to_model(lang):
@@ -275,11 +328,17 @@ def main():
                         'media file. Value will be checked in the following '
                         'order: 1. value as system path. 2. Value in local '
                         './model folder. 3. Value in /usr/share/vosk/models/.')
+    parser.add_argument('-a', '--auto-detect', dest='autoDetect',
+                        action='store_true', help='Probe for best model.')
+    parser.add_argument('-t', '--probe-time', dest='probeTime', default=300,
+                        type=int, help='Time in seconds to probe the input.')
     args = parser.parse_args()
 
     inputFile = args.inputFile
     outputFile = args.outputFile
-    if args.language:
+    if args.autoDetect:
+        model = detect_model(inputFile, args.probeTime)
+    elif args.language:
         model = match_language_to_model(args.language)
     else:
         model = model_path(args.model)
