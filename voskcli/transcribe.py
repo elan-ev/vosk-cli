@@ -16,8 +16,8 @@ limitations under the License.
 
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from webvtt import WebVTT, Caption
-from argparse import ArgumentParser
 from glob import glob
+import argparse
 import os
 import subprocess
 import json
@@ -26,6 +26,25 @@ SetLogLevel(-1)
 
 MAX_CHARS_PER_LINE = 35
 MAX_LINES_IN_PARAGRAPH = 2
+
+EXAMPLE_HELP_SECTION = '''
+EXAMPLES
+
+  Start speech recognition using model `vosk-model-en-us-0.22`:
+
+    vosk-cli -m vosk-model-en-us-0.22 -i in.mp4 -o out.vtt
+
+  Start speech recognition, automatically choosing the best model of either
+  `vosk-model-en-us-0.22` or `vosk-model-de-0.21`:
+
+    vosk-cli -m vosk-model-en-us-0.22 vosk-model-de-0.21 -i in.mp4 -o out.vtt
+
+  Start speech recognition, automatically choosing the best of all models
+  available in the default paths, probing the first 30 seconds of the input
+  file:
+
+    vosk-cli -t 30 -m auto -i in.mp4 -o out.vtt
+'''
 
 
 def time_string(seconds):
@@ -214,18 +233,25 @@ def transcribe(inputFile, outputFile, model):
     print('WebVTT saved.')
 
 
-def detect_model(inputFile, probeTime):
+def detect_model(inputFile, try_models, probeTime):
     '''
     Detect best model to use.
 
     :param inputFile: Path to input file
     :type inputFile: str
+    :param try_models: List of models to probe
+    :type try_models: list of str
     :param probeTime: Probe time in seconds
     :type probeTime: int
     :return: Best model to use
     :type model: str
     '''
-    available_models = glob('./models/*') + glob('/usr/share/vosk/models/*')
+    # get all available models if we got the special value auto
+    if try_models == ['auto']:
+        try_models = glob('./models/*') + glob('/usr/share/vosk/models/*')
+    else:
+        try_models = [model_path(model) for model in try_models]
+
     best_model = None
     best_confidence = 0
 
@@ -239,7 +265,7 @@ def detect_model(inputFile, probeTime):
     # We want to seek about 10% into the input file
     seek = str(int(float(duration) * 0.1))
 
-    for model in available_models:
+    for model in try_models:
         print(f'Probing model {model}')
         sample_rate = 16000
         try:
@@ -283,7 +309,7 @@ def match_language_to_model(lang):
 
     :param lang: The language string to map
     :type lang: str
-    :return: Path to language model
+    :return: Absolute path to language model
     '''
     # check if we have an old language dir for this language first
     language_dir = f'/usr/share/vosk/language/{lang}/'
@@ -314,8 +340,8 @@ def match_language_to_model(lang):
     if not len(modules):
         raise ValueError('Unable to map language to model')
 
-    model = modules[0]
-    print(f'Selecting model {model}')
+    model = os.path.abspath(modules[0])
+    print(f'Mapping language {lang} to model {model}')
     return model
 
 
@@ -323,34 +349,49 @@ def main():
     '''
     Define arguments for command line usage and carry out transcription.
     '''
-    parser = ArgumentParser(description='Creates a WebVTT file out of a '
-                            'media file with an audio track.')
+    parser = argparse.ArgumentParser(
+        description='Creates WebVTT from media file using speech recognition.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=EXAMPLE_HELP_SECTION
+    )
     parser.add_argument('-i', type=str, dest='inputFile', required=True,
                         help='Path to the media file to transcribed.')
     parser.add_argument('-o', type=str, dest='outputFile', required=True,
                         help='The path to the output file.')
-    parser.add_argument('-l', type=str, dest='language', required=False,
+    parser.add_argument('-l', type=str, dest='language', nargs='*',
                         help='The language code. It determines which model '
                         'will be used to transcribe the media file. '
+                        'You can use multiple values or auto and vosk-cli '
+                        'will try to determine the best model to use. '
                         'DEPRECATED: Use model (-m) instead.')
-    parser.add_argument('-m', '--model', type=str, dest='model',
+    parser.add_argument('-m', '--model', type=str, dest='model', nargs='*',
                         help='The language model to use for transcribing the '
                         'media file. Value will be checked in the following '
                         'order: 1. value as system path. 2. Value in local '
-                        './model folder. 3. Value in /usr/share/vosk/models/.')
-    parser.add_argument('-a', '--auto-detect', dest='autoDetect',
-                        action='store_true', help='Probe for best model.')
+                        './model folder. 3. Value in /usr/share/vosk/models/.'
+                        'If multiple values to this option are specified, '
+                        'vosk-cli will automatically detect the best of the '
+                        'specified models. If the special value `auto` is '
+                        'given, vosk-cli will detect the best of all modules '
+                        'in the default paths.')
     parser.add_argument('-t', '--probe-time', dest='probeTime', default=60,
                         type=int, help='Time in seconds to probe the input.')
     args = parser.parse_args()
 
     inputFile = args.inputFile
     outputFile = args.outputFile
-    if args.autoDetect:
-        model = detect_model(inputFile, args.probeTime)
-    elif args.language:
-        model = match_language_to_model(args.language)
+    model = args.model or []
+
+    # map languages to models
+    if args.language:
+        if args.language == ['auto']:
+            model = ['auto']
+        else:
+            model = [match_language_to_model(lang) for lang in args.language]
+
+    if model == ['auto'] or len(model) > 1:
+        model = detect_model(inputFile, model, args.probeTime)
     else:
-        model = model_path(args.model)
+        model = model_path(args.model[0])
 
     transcribe(inputFile, outputFile, model)

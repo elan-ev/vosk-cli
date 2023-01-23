@@ -22,9 +22,12 @@ pip install .
 ```
 
 ### 2. Install dependencies
-- FFmpeg
 
-vosk-cli uses ffmpeg to preprocess input files. The easiest way to install ffmpeg is by using a package manager.
+- FFmpeg
+- ffprobe
+
+Vosk-cli uses ffprobe to analyze and ffmpeg to preprocess input files.
+The easiest way to install ffmpeg is by using a package manager.
 If you want or need to install from source, visit
 [FFmpeg.org/download.html](https://ffmpeg.org/download.html) and follow the instructions for your operating system.
 
