@@ -1,7 +1,6 @@
 # vosk-cli
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/elan-ev/vosk-cli/Build%20and%20publish)
-![GitHub](https://img.shields.io/github/license/elan-ev/vosk-cli)
+![Apache 2.0 License](https://img.shields.io/github/license/elan-ev/vosk-cli)
 ![PyPI](https://img.shields.io/pypi/v/vosk-cli)
 
 This python package serves as an Vosk interface for Opencast. It allows to generate subtitles (WebVTT files) from Video and Audio sources via Vosk.
