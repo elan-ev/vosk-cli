@@ -29,7 +29,7 @@ def read(filename):
 
 setup(
     name='vosk-cli',
-    version='0.2',
+    version='0.3',
     description=description_text,
     url='https://github.com/elan-ev/vosk-cli',
     author='Martin Wygas',
