@@ -17,6 +17,9 @@ limitations under the License.
 from setuptools import setup
 import os
 
+description_text = 'A command line interface for Vosk. '\
+    'It generates subtitles (WebVTT files) from video and audio sources.'
+
 
 def read(filename):
     path = os.path.abspath(os.path.dirname(__file__))
@@ -24,14 +27,10 @@ def read(filename):
         return f.read()
 
 
-description_text = 'A command line interface for Vosk. '\
-    'It generates subtitles (WebVTT files) from video and audio sources.'
-
 setup(
     name='vosk-cli',
     version='0.2',
     description=description_text,
-    long_description=description_text,
     url='https://github.com/elan-ev/vosk-cli',
     author='Martin Wygas',
     author_email='mwygas@uos.de',
@@ -40,6 +39,8 @@ setup(
     license_files=('LICENSE'),
     include_package_data=True,
     install_requires=read('requirements.txt').split(),
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': ['vosk-cli = voskcli.transcribe:main'],
     })
