@@ -249,6 +249,7 @@ def detect_model(inputFile, try_models, probeTime):
     # get all available models if we got the special value auto
     if try_models == ['auto']:
         try_models = glob('./models/*') + glob('/usr/share/vosk/models/*')
+        try_models = [model for model in try_models if os.path.isdir(model)]
     else:
         try_models = [model_path(model) for model in try_models]
 
@@ -336,6 +337,7 @@ def match_language_to_model(lang):
     # Try finding a matching module
     modules = glob(f'/usr/share/vosk/models/*-{lang}-*') \
         or glob(f'./models/*-{lang}-*')
+    modules = [model for model in modules if os.path.isdir(model)]
 
     if not len(modules):
         raise ValueError('Unable to map language to model')
