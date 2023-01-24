@@ -29,7 +29,7 @@ description_text = 'A command line interface for Vosk. '\
 
 setup(
     name='vosk-cli',
-    version='0.1',
+    version='0.2',
     description=description_text,
     long_description=description_text,
     url='https://github.com/elan-ev/vosk-cli',
