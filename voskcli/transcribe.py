@@ -392,6 +392,6 @@ def main():
     if model == ['auto'] or len(model) > 1:
         model = detect_model(inputFile, model, args.probeTime)
     else:
-        model = model_path(args.model[0])
+        model = model_path(model[0])
 
     transcribe(inputFile, outputFile, model)
