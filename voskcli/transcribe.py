@@ -72,6 +72,7 @@ def model_path(model):
     1. Use value directly if it is an absolute directory path
     2. Probe for model in the local ./models folder
     3. Probe for model in /usr/share/vosk/models/
+    4. Probe for model in current working directory
 
     :param model: model command line argument
     :type model: str
@@ -92,6 +93,14 @@ def model_path(model):
     # Check the global models folder
     if os.path.isdir('/usr/share/vosk/models/' + model):
         return '/usr/share/vosk/models/' + model
+    
+    # Check as path. Since we already try absolute paths above, this should
+    # only catch relative paths in current working directory.
+    if os.path.isdir(absmodel):
+        # NOTE: This makes the first check redundant. But I don't want to break
+        # existing scripts that may rely on the preceding resolution order.
+        return absmodel
+    
     raise ValueError('Cannot resolve model path')
 
 
