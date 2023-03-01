@@ -80,7 +80,7 @@ def model_path(model):
     '''
     # Do we have an absolute path to a directory?
     absmodel = os.path.abspath(model)
-    if model.startswith(absmodel):
+    if os.path.normpath(model).startswith(absmodel):
         if os.path.isdir(model):
             return model
         raise ValueError(f'Model path {model} does not exist')
