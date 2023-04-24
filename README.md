@@ -34,8 +34,6 @@ If you want or need to install from source, visit
 
 Go to [https://alphacephei.com/vosk/models](https://alphacephei.com/vosk/models) and download at least the English language model. The larger models generally yield better results.
 
-You can unzip the folder of the language model into any directory, but it is recommended to create and use a `./models` folder in the project directory.
-
 ## Usage
 
 Now you are able to run `vosk-cli -i <input_file_path> -o <output_file_path> -m <model_name_or_path>`.
@@ -45,3 +43,13 @@ For example, if there is a `video.mp4` file in your download folder and a model 
 `vosk-cli -i ~/Downloads/video.mp4 -o text -m vosk-model-en-us-0.22`
 
 This will create a `text.vtt` file (which contains the transcribed captions) in your current directory.
+
+### Model Search Paths
+
+Vosk-cli follows the following algorithm when attempting to find matching models:
+
+- Check if the `-m` flag is passed as an absolute path, if so use it verbatim.
+- Check if `./models/$model` is a directory, if so use it.
+- Check if `/usr/share/vosk/models/$model` is a directory, if so use it.
+
+**NOTE:** Vosk-cli requires an exact match between directory and model name.  If you pass `-m eng` you must have an `eng` model in your model search path!
