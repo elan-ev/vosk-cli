@@ -313,10 +313,11 @@ def match_language_to_model(lang):
     :return: Absolute path to language model
     '''
     # check if we have an old language dir for this language first
-    language_dir = f'/usr/share/vosk/language/{lang}/'
-    if os.path.isdir(language_dir):
-        print(f'Mapping language option to model {language_dir}')
-        return language_dir
+    language_dirs = [f'/usr/share/vosk/language/{lang}/', f'./models/{lang}']
+    for language_dir in language_dirs:
+        if os.path.isdir(language_dir):
+            print(f'Mapping language option to model {language_dir}')
+            return os.path.abspath(language_dir)
 
     # Map some common language codes
     language_mappings = {
